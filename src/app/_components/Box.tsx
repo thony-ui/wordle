@@ -12,7 +12,7 @@ function Box({ letter, status }: { letter: string; status: string }) {
 
   return (
     <div
-      className={`w-[100px] h-[100px] border-1 border-black flex items-center justify-center ${bgColor}`}
+      className={`w-[50px] h-[50px] md:w-[100px] md:h-[100px] border-1 border-black flex items-center justify-center ${bgColor}`}
     >
       <p>{letter}</p>
     </div>

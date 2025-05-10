@@ -1,8 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import Row from "./_components/Row";
-
-const ANSWER = "hello";
+import { useGetWord } from "./queries/use-get-word";
 
 function checkCorrectPosition(
   result: string[],
@@ -32,11 +31,16 @@ function checkCorrectPosition(
 
 export default function Home() {
   const [words, setWords] = useState<string[]>(["", "", "", "", "", ""]);
+  const [word, setWord] = useState<string>("");
   const [currentWord, setCurrentWord] = useState<string>("");
   const index = useMemo(() => words.findIndex((w) => w === ""), [words]);
   const [status, setStatus] = useState<string[][]>(
     Array.from({ length: 6 }, () => Array(5).fill(""))
   );
+  const { data, isLoading, isError } = useGetWord();
+  useEffect(() => {
+    setWord(data?.word ?? "");
+  }, [data]);
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Backspace") {
@@ -50,7 +54,7 @@ export default function Home() {
       if (currentWord.length === 5 && event.key === "Enter") {
         // check if its a current word when user press enter
         const result = Array(5).fill(undefined);
-        const answerLetters = ANSWER.split("");
+        const answerLetters = word.split("");
         const inputLetters = currentWord.split("");
         checkCorrectPosition(result, answerLetters, inputLetters);
         // update the status of the current word
@@ -67,8 +71,10 @@ export default function Home() {
           return next;
         });
         setCurrentWord("");
-        if (currentWord === ANSWER) {
+        if (currentWord === word) {
           alert("You Win");
+          setWords(["", "", "", "", "", ""]);
+          setStatus(Array.from({ length: 6 }, () => Array(5).fill("")));
         } else if (index === words.length - 1) {
           alert("You Lose");
         }
@@ -84,8 +90,12 @@ export default function Home() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentWord]);
+
+  if (isLoading) return <div>Loading...</div>;
+  if (isError) return <div>Error</div>;
   return (
     <div className="flex flex-col gap-2">
+      <h1 className="text-6xl font-bold text-center mb-4">Wordle</h1>
       {words.map((word, i) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
         <Row

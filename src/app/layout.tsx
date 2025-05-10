@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import ReactQueryProvider from "./providers/QueryClientProvider";
 
 export const metadata: Metadata = {
   title: "Wordle clone",
@@ -13,9 +14,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="flex flex-col items-center justify-center min-h-screen"
-      >
-        {children}
+      <body className="flex flex-col items-center justify-center min-h-screen">
+        <ReactQueryProvider>{children}</ReactQueryProvider>
       </body>
     </html>
   );
