@@ -38,6 +38,10 @@ export default function Home() {
     Array.from({ length: 6 }, () => Array(5).fill(""))
   );
   const { data, isLoading, isError } = useGetWord();
+  const resetState = () => {
+    setWords(["", "", "", "", "", ""]);
+    setStatus(Array.from({ length: 6 }, () => Array(5).fill("")));
+  };
   useEffect(() => {
     setWord(data?.word ?? "");
   }, [data]);
@@ -48,7 +52,7 @@ export default function Home() {
         return;
       }
       if (currentWord.length < 5 && event.key.match(/^[a-zA-Z]$/)) {
-        setCurrentWord((prev) => prev + event.key);
+        setCurrentWord((prev) => prev + event.key.toLocaleLowerCase());
         return;
       }
       if (currentWord.length === 5 && event.key === "Enter") {
@@ -73,10 +77,10 @@ export default function Home() {
         setCurrentWord("");
         if (currentWord === word) {
           alert("You Win");
-          setWords(["", "", "", "", "", ""]);
-          setStatus(Array.from({ length: 6 }, () => Array(5).fill("")));
+          resetState();
         } else if (index === words.length - 1) {
-          alert("You Lose");
+          alert("You Lose. The word was " + word);
+          resetState();
         }
         return;
       }
