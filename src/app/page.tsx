@@ -1,9 +1,15 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useReducer, useState } from "react";
 import Row from "./_components/Row";
 import { useGetWord } from "./queries/use-get-word";
 import TileRows from "./_components/TileRows";
 import Loader from "./_components/Loader";
+import { INITIAL_STATE, tileReducer, TileState } from "./reducers/tileReducer";
+import {
+  FIRST_ROW_OF_LETTERS,
+  SECOND_ROW_OF_LETTERS,
+  THIRD_ROW_OF_LETTERS,
+} from "./constants/rowOfLetters";
 
 function checkCorrectPosition(
   result: string[],
@@ -32,52 +38,45 @@ function checkCorrectPosition(
 }
 
 export default function Home() {
-  const [words, setWords] = useState<string[]>(["", "", "", "", "", ""]);
+  const [state, dispatch] = useReducer(tileReducer, INITIAL_STATE);
   const [word, setWord] = useState<string>("");
   const [currentWord, setCurrentWord] = useState<string>("");
-  const index = useMemo(() => words.findIndex((w) => w === ""), [words]);
-  const [status, setStatus] = useState<string[][]>(
-    Array.from({ length: 6 }, () => Array(5).fill(""))
+  const index = useMemo(
+    () => state.words.findIndex((w) => w === ""),
+    [state.words]
   );
+
   const { data, isLoading, isError } = useGetWord();
-  const firstRowOfLetters = ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"];
-  const secondRowOfLetters = [
-    "A",
-    "S",
-    "D",
-    "F",
-    "G",
-    "H",
-    "J",
-    "K",
-    "L",
-    "enter",
-  ];
-  const thirdRowOfLetters = ["Z", "X", "C", "V", "B", "N", "M", "delete"];
+
   const updateStatusAndWord = (result: string[]) => {
-    setStatus((prev) => {
-      const next = [...prev];
-      next[index] = result;
-      return next;
+    dispatch({
+      type: TileState.SET_STATUS,
+      payload: {
+        index,
+        result,
+      },
     });
-    setWords((prev) => {
-      const next = [...prev];
-      next[index] = currentWord;
-      return next;
+    dispatch({
+      type: TileState.SET_WORDS,
+      payload: {
+        index,
+        currentWord,
+      },
     });
   };
   const checkWinOrLose = () => {
     if (currentWord === word) {
       alert("You Win");
       resetState();
-    } else if (index === words.length - 1) {
+    } else if (index === state.words.length - 1) {
       alert("You Lose. The word was " + word);
       resetState();
     }
   };
   const resetState = () => {
-    setWords(["", "", "", "", "", ""]);
-    setStatus(Array.from({ length: 6 }, () => Array(5).fill("")));
+    dispatch({
+      type: TileState.RESET,
+    });
   };
   const clickTile = (letter: string) => {
     if (letter === "enter" && currentWord.length === 5) {
@@ -136,17 +135,17 @@ export default function Home() {
   return (
     <div className="flex flex-col gap-4 items-center">
       <h1 className="text-6xl font-bold text-center">Wordle</h1>
-      {words.map((word, i) => (
+      {state.words.map((word, i) => (
         <Row
           key={i}
           word={i === index ? currentWord : word}
-          status={status[i]}
+          status={state.status[i]}
         />
       ))}
-      <TileRows tiles={firstRowOfLetters} onClick={clickTile} />
-      <TileRows tiles={secondRowOfLetters} onClick={clickTile} />
+      <TileRows tiles={FIRST_ROW_OF_LETTERS} onClick={clickTile} />
+      <TileRows tiles={SECOND_ROW_OF_LETTERS} onClick={clickTile} />
       <TileRows
-        tiles={thirdRowOfLetters}
+        tiles={THIRD_ROW_OF_LETTERS}
         onClick={clickTile}
         onDelete={deleteWordInTile}
       />
