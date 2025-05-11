@@ -10,6 +10,7 @@ import {
   SECOND_ROW_OF_LETTERS,
   THIRD_ROW_OF_LETTERS,
 } from "./constants/rowOfLetters";
+import Swal from "sweetalert2";
 
 function checkCorrectPosition(
   result: string[],
@@ -40,6 +41,7 @@ function checkCorrectPosition(
 export default function Home() {
   const [state, dispatch] = useReducer(tileReducer, INITIAL_STATE);
   const [word, setWord] = useState<string>("");
+  const [seenLetters, setSeenLetters] = useState<string[]>([]);
   const [currentWord, setCurrentWord] = useState<string>("");
   const index = useMemo(
     () => state.words.findIndex((w) => w === ""),
@@ -66,10 +68,10 @@ export default function Home() {
   };
   const checkWinOrLose = () => {
     if (currentWord === word) {
-      alert("You Win");
+      alert("You win!");
       resetState();
     } else if (index === state.words.length - 1) {
-      alert("You Lose. The word was " + word);
+      alert("You lose!");
       resetState();
     }
   };
@@ -79,22 +81,31 @@ export default function Home() {
     });
   };
   const clickTile = (letter: string) => {
+    if (letter != "enter" && currentWord.length < 5) {
+      setCurrentWord((prev) => prev + letter.toLowerCase());
+      setSeenLetters((prev) => [...prev, letter.toUpperCase()]);
+      return;
+    }
     if (letter === "enter" && currentWord.length === 5) {
       const result = Array(5).fill(undefined);
       const answerLetters = word.split("");
       const inputLetters = currentWord.split("");
       checkCorrectPosition(result, answerLetters, inputLetters);
       updateStatusAndWord(result);
+      dispatch({
+        type: TileState.UPDATE_TILE_COLOR,
+        payload: {
+          seenLetters,
+        },
+      });
+
       checkWinOrLose();
       setCurrentWord("");
-      return;
-    }
-    if (currentWord.length < 5) {
-      setCurrentWord((prev) => prev + letter.toLowerCase());
     }
   };
   const deleteWordInTile = () => {
     setCurrentWord((prev) => prev.slice(0, -1));
+    setSeenLetters((prev) => prev.slice(0, -1));
   };
   const handleKeyDown = (event: KeyboardEvent) => {
     if (event.key === "Backspace") {
@@ -103,20 +114,35 @@ export default function Home() {
     }
     if (currentWord.length < 5 && event.key.match(/^[a-zA-Z]$/)) {
       setCurrentWord((prev) => prev + event.key.toLocaleLowerCase());
+      setSeenLetters((prev) => [...prev, event.key.toUpperCase()]);
       return;
     }
     if (currentWord.length === 5 && event.key === "Enter") {
       // check if its a current word when user press enter
+
       const result = Array(5).fill(undefined);
       const answerLetters = word.split("");
       const inputLetters = currentWord.split("");
       checkCorrectPosition(result, answerLetters, inputLetters);
       updateStatusAndWord(result);
+      dispatch({
+        type: TileState.UPDATE_TILE_COLOR,
+        payload: {
+          seenLetters,
+        },
+      });
       checkWinOrLose();
       setCurrentWord("");
-      return;
     }
   };
+  useEffect(() => {
+    Swal.fire({
+      title: "Welcome to Wordle",
+      text: "Try to guess the word in 6 tries. After each guess, the color of the tiles will change to show how close your guess was to the word.",
+      icon: "info",
+      confirmButtonText: "OK",
+    });
+  }, []);
   useEffect(() => {
     setWord(data?.word ?? "");
   }, [data]);
@@ -126,7 +152,6 @@ export default function Home() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentWord]);
 
   if (isLoading) return <Loader>Loading...</Loader>;
@@ -142,11 +167,20 @@ export default function Home() {
           status={state.status[i]}
         />
       ))}
-      <TileRows tiles={FIRST_ROW_OF_LETTERS} onClick={clickTile} />
-      <TileRows tiles={SECOND_ROW_OF_LETTERS} onClick={clickTile} />
+      <TileRows
+        tiles={FIRST_ROW_OF_LETTERS}
+        onClick={clickTile}
+        status={state.firstRow}
+      />
+      <TileRows
+        tiles={SECOND_ROW_OF_LETTERS}
+        onClick={clickTile}
+        status={state.secondRow}
+      />
       <TileRows
         tiles={THIRD_ROW_OF_LETTERS}
         onClick={clickTile}
+        status={state.thirdRow}
         onDelete={deleteWordInTile}
       />
     </div>

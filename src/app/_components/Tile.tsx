@@ -3,10 +3,12 @@ import React from "react";
 function Tile({
   character,
   onClick,
+  colorStatus,
   onDelete,
 }: {
   character: string;
   onClick: (letter: string) => void;
+  colorStatus: boolean;
   onDelete?: () => void;
 }) {
   return (
@@ -17,7 +19,9 @@ function Tile({
           : character === "enter"
           ? "w-[60px]"
           : "w-[30px]"
-      } bg-gray-400 text-white flex flex-col items-center justify-center cursor-pointer rounded-md`}
+      } ${
+        colorStatus ? "bg-gray-600" : "bg-gray-400"
+      } text-white flex flex-col items-center justify-center cursor-pointer rounded-md`}
       onClick={() => {
         if (character === "delete" && onDelete) {
           onDelete();

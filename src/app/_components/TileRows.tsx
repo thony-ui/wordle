@@ -4,10 +4,12 @@ import Tile from "./Tile";
 function TileRows({
   tiles,
   onClick,
+  status,
   onDelete,
 }: {
   tiles: string[];
   onClick: (letter: string) => void;
+  status: boolean[];
   onDelete?: () => void;
 }) {
   return (
@@ -17,6 +19,7 @@ function TileRows({
           key={i}
           character={letter}
           onClick={onClick}
+          colorStatus={status[i]}
           onDelete={onDelete}
         />
       ))}
