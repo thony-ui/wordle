@@ -90,7 +90,9 @@ export default function Home() {
       setCurrentWord("");
       return;
     }
-    setCurrentWord((prev) => prev + letter.toLowerCase());
+    if (currentWord.length < 5) {
+      setCurrentWord((prev) => prev + letter.toLowerCase());
+    }
   };
   const deleteWordInTile = () => {
     setCurrentWord((prev) => prev.slice(0, -1));
