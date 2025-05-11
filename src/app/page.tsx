@@ -2,6 +2,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Row from "./_components/Row";
 import { useGetWord } from "./queries/use-get-word";
+import TileRows from "./_components/TileRows";
+import Loader from "./_components/Loader";
 
 function checkCorrectPosition(
   result: string[],
@@ -38,76 +40,114 @@ export default function Home() {
     Array.from({ length: 6 }, () => Array(5).fill(""))
   );
   const { data, isLoading, isError } = useGetWord();
+  const firstRowOfLetters = ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"];
+  const secondRowOfLetters = [
+    "A",
+    "S",
+    "D",
+    "F",
+    "G",
+    "H",
+    "J",
+    "K",
+    "L",
+    "enter",
+  ];
+  const thirdRowOfLetters = ["Z", "X", "C", "V", "B", "N", "M", "delete"];
+  const updateStatusAndWord = (result: string[]) => {
+    setStatus((prev) => {
+      const next = [...prev];
+      next[index] = result;
+      return next;
+    });
+    setWords((prev) => {
+      const next = [...prev];
+      next[index] = currentWord;
+      return next;
+    });
+  };
+  const checkWinOrLose = () => {
+    if (currentWord === word) {
+      alert("You Win");
+      resetState();
+    } else if (index === words.length - 1) {
+      alert("You Lose. The word was " + word);
+      resetState();
+    }
+  };
   const resetState = () => {
     setWords(["", "", "", "", "", ""]);
     setStatus(Array.from({ length: 6 }, () => Array(5).fill("")));
+  };
+  const clickTile = (letter: string) => {
+    if (letter === "enter" && currentWord.length === 5) {
+      const result = Array(5).fill(undefined);
+      const answerLetters = word.split("");
+      const inputLetters = currentWord.split("");
+      checkCorrectPosition(result, answerLetters, inputLetters);
+      updateStatusAndWord(result);
+      checkWinOrLose();
+      setCurrentWord("");
+      return;
+    }
+    setCurrentWord((prev) => prev + letter.toLowerCase());
+  };
+  const deleteWordInTile = () => {
+    setCurrentWord((prev) => prev.slice(0, -1));
+  };
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if (event.key === "Backspace") {
+      deleteWordInTile();
+      return;
+    }
+    if (currentWord.length < 5 && event.key.match(/^[a-zA-Z]$/)) {
+      setCurrentWord((prev) => prev + event.key.toLocaleLowerCase());
+      return;
+    }
+    if (currentWord.length === 5 && event.key === "Enter") {
+      // check if its a current word when user press enter
+      const result = Array(5).fill(undefined);
+      const answerLetters = word.split("");
+      const inputLetters = currentWord.split("");
+      checkCorrectPosition(result, answerLetters, inputLetters);
+      updateStatusAndWord(result);
+      checkWinOrLose();
+      setCurrentWord("");
+      return;
+    }
   };
   useEffect(() => {
     setWord(data?.word ?? "");
   }, [data]);
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Backspace") {
-        setCurrentWord((prev) => prev.slice(0, -1));
-        return;
-      }
-      if (currentWord.length < 5 && event.key.match(/^[a-zA-Z]$/)) {
-        setCurrentWord((prev) => prev + event.key.toLocaleLowerCase());
-        return;
-      }
-      if (currentWord.length === 5 && event.key === "Enter") {
-        // check if its a current word when user press enter
-        const result = Array(5).fill(undefined);
-        const answerLetters = word.split("");
-        const inputLetters = currentWord.split("");
-        checkCorrectPosition(result, answerLetters, inputLetters);
-        // update the status of the current word
-        setStatus((prev) => {
-          const next = [...prev];
-          next[index] = result;
-          return next;
-        });
-
-        // update the words array with the current word
-        setWords((prev) => {
-          const next = [...prev];
-          next[index] = currentWord;
-          return next;
-        });
-        setCurrentWord("");
-        if (currentWord === word) {
-          alert("You Win");
-          resetState();
-        } else if (index === words.length - 1) {
-          alert("You Lose. The word was " + word);
-          resetState();
-        }
-        return;
-      }
-    };
-    // listen for onkeydown event
     window.addEventListener("keydown", handleKeyDown);
 
-    // Cleanup
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentWord]);
 
-  if (isLoading) return <div>Loading...</div>;
-  if (isError) return <div>Error</div>;
+  if (isLoading) return <Loader>Loading...</Loader>;
+  if (isError) return <Loader>Error</Loader>;
+
   return (
-    <div className="flex flex-col gap-2">
-      <h1 className="text-6xl font-bold text-center mb-4">Wordle</h1>
+    <div className="flex flex-col gap-4 items-center">
+      <h1 className="text-6xl font-bold text-center">Wordle</h1>
       {words.map((word, i) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
         <Row
           key={i}
           word={i === index ? currentWord : word}
           status={status[i]}
         />
       ))}
+      <TileRows tiles={firstRowOfLetters} onClick={clickTile} />
+      <TileRows tiles={secondRowOfLetters} onClick={clickTile} />
+      <TileRows
+        tiles={thirdRowOfLetters}
+        onClick={clickTile}
+        onDelete={deleteWordInTile}
+      />
     </div>
   );
 }
