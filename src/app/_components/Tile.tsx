@@ -20,7 +20,7 @@ function Tile({
           ? "w-[60px]"
           : "w-[30px]"
       } ${
-        colorStatus ? "bg-gray-600" : "bg-gray-400"
+        colorStatus ? "bg-gray-500" : "bg-green-800"
       } text-white flex flex-col items-center justify-center cursor-pointer rounded-md`}
       onClick={() => {
         if (character === "delete" && onDelete) {

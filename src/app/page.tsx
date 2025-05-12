@@ -11,6 +11,7 @@ import {
   THIRD_ROW_OF_LETTERS,
 } from "./constants/rowOfLetters";
 import Swal from "sweetalert2";
+import { motion } from "framer-motion";
 
 function checkCorrectPosition(
   result: string[],
@@ -137,7 +138,6 @@ export default function Home() {
       return;
     }
     if (currentWord.length === 5 && event.key === "Enter") {
-      // check if its a current word when user press enter
       const result = Array(5).fill(undefined);
       const answerLetters = word.split("");
       const inputLetters = currentWord.split("");
@@ -179,7 +179,14 @@ export default function Home() {
 
   return (
     <div className="flex flex-col gap-4 items-center">
-      <h1 className="text-6xl font-bold text-center">Wordle</h1>
+      <motion.h1
+        className="text-6xl font-bold text-center text-green-100"
+        initial={{ opacity: 0, y: -50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1, ease: "easeInOut" }}
+      >
+        Wordle
+      </motion.h1>
       {state.words.map((word, i) => (
         <Row
           key={i}
