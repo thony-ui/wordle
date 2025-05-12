@@ -11,6 +11,11 @@ export enum TileState {
   RESET,
 
   UPDATE_TILE_COLOR,
+  UPDATE_CURRENT_WORD,
+
+  DELETE_LAST_LETTER,
+
+  RESET_CURRENT_WORD,
 }
 
 export const INITIAL_STATE = {
@@ -19,6 +24,8 @@ export const INITIAL_STATE = {
   firstRow: Array.from({ length: 10 }).fill(false) as boolean[],
   secondRow: Array.from({ length: 9 }).fill(false) as boolean[],
   thirdRow: Array.from({ length: 7 }).fill(false) as boolean[],
+  seenLetters: [] as string[],
+  currentWord: "",
 };
 
 export interface TileStateActionSetStatus {
@@ -48,11 +55,29 @@ export interface TileStateActionUpdateTileColor {
   };
 }
 
+export interface TileStateActionUpdateCurrentWord {
+  type: TileState.UPDATE_CURRENT_WORD;
+  payload: {
+    letter: string;
+  };
+}
+
+export interface TileStateActionDeleteLastLetter {
+  type: TileState.DELETE_LAST_LETTER;
+}
+
+export interface TileStateActionResetCurrentWord {
+  type: TileState.RESET_CURRENT_WORD;
+}
+
 export type TileReducerAction =
   | TileStateActionSetStatus
   | TileStateActionSetWords
   | TileStateActionReset
-  | TileStateActionUpdateTileColor;
+  | TileStateActionUpdateTileColor
+  | TileStateActionUpdateCurrentWord
+  | TileStateActionDeleteLastLetter
+  | TileStateActionResetCurrentWord;
 
 export interface TileReducerState {
   status: string[][];
@@ -60,6 +85,9 @@ export interface TileReducerState {
   firstRow: boolean[];
   secondRow: boolean[];
   thirdRow: boolean[];
+
+  seenLetters: string[];
+  currentWord: string;
 }
 
 export const tileReducer = (
@@ -114,6 +142,31 @@ export const tileReducer = (
         firstRow: nextFirstRow,
         secondRow: nextSecondRow,
         thirdRow: nextThirdRow,
+      };
+    }
+    case TileState.UPDATE_CURRENT_WORD: {
+      const { letter } = action.payload;
+      const nextSeenLetters = [...state.seenLetters, letter];
+      const nextCurrentWord = state.currentWord + letter;
+      return {
+        ...state,
+        seenLetters: nextSeenLetters,
+        currentWord: nextCurrentWord,
+      };
+    }
+    case TileState.DELETE_LAST_LETTER: {
+      const nextSeenLetters = [...state.seenLetters.slice(0, -1)];
+      const nextCurrentWord = state.currentWord.slice(0, -1);
+      return {
+        ...state,
+        seenLetters: nextSeenLetters,
+        currentWord: nextCurrentWord,
+      };
+    }
+    case TileState.RESET_CURRENT_WORD: {
+      return {
+        ...state,
+        currentWord: "",
       };
     }
     default:
