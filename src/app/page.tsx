@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useReducer, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import Row from "./_components/Row";
 import { useGetWord } from "./queries/use-get-word";
 import TileRows from "./_components/TileRows";
@@ -99,10 +99,11 @@ export default function Home() {
     });
     setSeenLetters([]);
   };
-  const updateCurrentWord = (letter: string) => {
+  const updateCurrentWord = useCallback((letter: string) => {
     setCurrentWord((prev) => prev + letter.toLowerCase());
     setSeenLetters((prev) => [...prev, letter.toUpperCase()]);
-  };
+  }, []);
+
   const clickTile = (letter: string) => {
     if (letter != "enter" && currentWord.length < 5) {
       updateCurrentWord(letter);
@@ -124,10 +125,12 @@ export default function Home() {
       setCurrentWord("");
     }
   };
-  const deleteWordInTile = () => {
+
+  const deleteWordInTile = useCallback(() => {
     setCurrentWord((prev) => prev.slice(0, -1));
     setSeenLetters((prev) => prev.slice(0, -1));
-  };
+  }, []);
+
   const handleKeyDown = (event: KeyboardEvent) => {
     if (event.key === "Backspace") {
       deleteWordInTile();
