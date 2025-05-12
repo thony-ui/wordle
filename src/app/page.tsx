@@ -68,22 +68,43 @@ export default function Home() {
   };
   const checkWinOrLose = () => {
     if (currentWord === word) {
-      alert("You win!");
-      resetState();
+      setTimeout(() => {
+        Swal.fire({
+          title: "You win!",
+          text: `The word was ${word}`,
+          icon: "success",
+          confirmButtonText: "Play Again",
+        }).then(() => {
+          resetState();
+        });
+      }, 0);
     } else if (index === state.words.length - 1) {
-      alert("You lose!");
-      resetState();
+      setTimeout(() => {
+        Swal.fire({
+          title: "You lose!",
+          text: `The word was ${word}`,
+          icon: "error",
+          confirmButtonText: "Play Again",
+        }).then(() => {
+          resetState();
+        });
+      }, 0);
     }
   };
+
   const resetState = () => {
     dispatch({
       type: TileState.RESET,
     });
+    setSeenLetters([]);
+  };
+  const updateCurrentWord = (letter: string) => {
+    setCurrentWord((prev) => prev + letter.toLowerCase());
+    setSeenLetters((prev) => [...prev, letter.toUpperCase()]);
   };
   const clickTile = (letter: string) => {
     if (letter != "enter" && currentWord.length < 5) {
-      setCurrentWord((prev) => prev + letter.toLowerCase());
-      setSeenLetters((prev) => [...prev, letter.toUpperCase()]);
+      updateCurrentWord(letter);
       return;
     }
     if (letter === "enter" && currentWord.length === 5) {
@@ -98,7 +119,6 @@ export default function Home() {
           seenLetters,
         },
       });
-
       checkWinOrLose();
       setCurrentWord("");
     }
@@ -113,17 +133,16 @@ export default function Home() {
       return;
     }
     if (currentWord.length < 5 && event.key.match(/^[a-zA-Z]$/)) {
-      setCurrentWord((prev) => prev + event.key.toLocaleLowerCase());
-      setSeenLetters((prev) => [...prev, event.key.toUpperCase()]);
+      updateCurrentWord(event.key);
       return;
     }
     if (currentWord.length === 5 && event.key === "Enter") {
       // check if its a current word when user press enter
-
       const result = Array(5).fill(undefined);
       const answerLetters = word.split("");
       const inputLetters = currentWord.split("");
       checkCorrectPosition(result, answerLetters, inputLetters);
+
       updateStatusAndWord(result);
       dispatch({
         type: TileState.UPDATE_TILE_COLOR,
@@ -143,6 +162,7 @@ export default function Home() {
       confirmButtonText: "OK",
     });
   }, []);
+
   useEffect(() => {
     setWord(data?.word ?? "");
   }, [data]);

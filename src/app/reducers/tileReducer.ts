@@ -117,6 +117,6 @@ export const tileReducer = (
       };
     }
     default:
-      return INITIAL_STATE as TileReducerState;
+      return INITIAL_STATE;
   }
 };
