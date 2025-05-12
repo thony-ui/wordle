@@ -41,24 +41,20 @@ export default function Home() {
     });
   };
   const checkWinOrLose = (currentWord: string, word: string) => {
-    if (currentWord !== word && index !== state.words.length - 1) {
-      return;
-    }
-    if (currentWord === word || index === state.words.length - 1) {
-      const isWin = currentWord === word;
-      setTimeout(() => {
-        Swal.fire({
-          title: `${isWin ? "Congratulations!" : "Game Over"}`,
-          text: `${
-            isWin ? `You guessed the word! ${word}` : `Try and guess again!`
-          }`,
-          icon: `${isWin ? "success" : "error"}`,
-          confirmButtonText: "Play Again",
-        }).then(() => {
-          resetState();
-        });
-      }, 0);
-    }
+    if (currentWord !== word && index !== state.words.length - 1) return;
+    const isWin = currentWord === word;
+    setTimeout(() => {
+      Swal.fire({
+        title: `${isWin ? "Congratulations!" : "Game Over"}`,
+        text: `${
+          isWin ? `You guessed the word! ${word}` : `Try and guess again!`
+        }`,
+        icon: `${isWin ? "success" : "error"}`,
+        confirmButtonText: "Play Again",
+      }).then(() => {
+        resetState();
+      });
+    }, 0);
   };
 
   const resetState = () => {
@@ -75,36 +71,31 @@ export default function Home() {
     });
   }, []);
 
+  const handleSubmit = () => {
+    if (state.currentWord.length !== 5) return;
+    const result = Array(5).fill(undefined);
+    const answerLetters = word.split("");
+    const inputLetters = state.currentWord.split("");
+    checkCorrectPosition(result, answerLetters, inputLetters);
+    updateStatusAndWord(result);
+    dispatch({
+      type: TileState.UPDATE_TILE_COLOR,
+      payload: {
+        seenLetters: state.seenLetters,
+      },
+    });
+    checkWinOrLose(state.currentWord, word);
+    dispatch({
+      type: TileState.RESET_CURRENT_WORD,
+    });
+  };
+
   const clickTile = (letter: string) => {
-    const lower = letter.toLowerCase();
-
-    if (lower === "backspace") {
-      deleteWordInTile();
-      return;
-    }
-
-    if (lower === "enter" && state.currentWord.length === 5) {
-      const result = Array(5).fill(undefined);
-      const answerLetters = word.split("");
-      const inputLetters = state.currentWord.split("");
-      checkCorrectPosition(result, answerLetters, inputLetters);
-      updateStatusAndWord(result);
-      dispatch({
-        type: TileState.UPDATE_TILE_COLOR,
-        payload: {
-          seenLetters: state.seenLetters,
-        },
-      });
-      checkWinOrLose(state.currentWord, word);
-      dispatch({
-        type: TileState.RESET_CURRENT_WORD,
-      });
-      return;
-    }
-
-    if (/^[a-zA-Z]$/.test(lower) && state.currentWord.length < 5) {
-      updateCurrentWord(lower);
-    }
+    const lowerCaseLetter = letter.toLowerCase();
+    if (lowerCaseLetter === "backspace") return deleteWordInTile();
+    if (lowerCaseLetter === "enter") return handleSubmit();
+    if (/^[a-zA-Z]$/.test(lowerCaseLetter) && state.currentWord.length < 5)
+      updateCurrentWord(lowerCaseLetter);
   };
 
   const deleteWordInTile = useCallback(() => {
@@ -135,6 +126,7 @@ export default function Home() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.currentWord]);
 
   if (isLoading) return <Loader>Loading...</Loader>;
